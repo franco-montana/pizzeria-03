@@ -36,7 +36,7 @@ body {
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: var(--box-shadow);
-  background: url('../assets/pizza-pattern-bg.jpg') center center repeat;
+  background: #f8f9fa;
   background-size: 200px;
   position: relative;
 }

@@ -1,10 +1,11 @@
+import { useUser } from '../context/useUser'
 import { Link } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
+import { useCart } from '../context/useCart'
 import { formatPrice } from '../utils/formatPrice'
 
 const Navbar = () => {
   const { getTotal, getCartCount } = useCart()
-  const token = false
+  const { token, logout } = useUser()
 
   return (
     <>
@@ -22,11 +23,11 @@ const Navbar = () => {
                 <Link className="nav-link" to="/">Home</Link>
               </li>
             </ul>
-            <div className="d-flex">
+            <div className="d-flex flex-wrap gap-2">
               {token ? (
                 <>
                   <Link to="/profile" className="btn btn-outline-light me-2"> Profile</Link>
-                  <button className="btn btn-outline-light me-2"> Logout</button>
+                  <button onClick={logout} className="btn btn-outline-light me-2"> Logout</button>
                 </>
               ) : (
                 <>
@@ -35,7 +36,7 @@ const Navbar = () => {
                 </>
               )}
               <Link to="/cart" className="btn btn-success">
-                🛒 ({getCartCount()}) - ${formatPrice(getTotal())}
+                🛒 Total: ${formatPrice(getTotal())} ({getCartCount()})
               </Link>
             </div>
           </div>

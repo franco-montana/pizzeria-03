@@ -1,7 +1,8 @@
 
-import { createContext, useState, useContext } from 'react';
+import { useState } from 'react';
+import { CartContext } from './useCart';
 
-const CartContext = createContext();
+
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -39,7 +40,7 @@ export const CartProvider = ({ children }) => {
   const decreaseQuantity = (pizzaId) => {
     setCartItems(prevItems =>
       prevItems.map(item =>
-        item.id === pizzaId && item.quantity > 1
+        item.id === pizzaId
           ? { ...item, quantity: item.quantity - 1 }
           : item
       ).filter(item => item.quantity > 0)
@@ -62,11 +63,10 @@ export const CartProvider = ({ children }) => {
       increaseQuantity,
       decreaseQuantity,
       getTotal,
-      getCartCount
+      getCartCount,
+      clearCart: () => setCartItems([])
     }}>
       {children}
     </CartContext.Provider>
   );
 };
-
-export const useCart = () => useContext(CartContext);

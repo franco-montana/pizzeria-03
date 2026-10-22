@@ -1,0 +1,54 @@
+import { afterEach, expect, test } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom/vitest';
+import App from '../src/App';
+import { apiRequest } from '../src/services/api';
+
+afterEach(cleanup);
+test('frontend completo con backend real: pizzas, registro, perfil, login y compra', async () => {
+  window.history.replaceState({}, '', '/');
+  render(<App />);
+  const user = userEvent.setup();
+  const email = `revision-${Date.now()}@example.com`;
+  const password = 'prueba123';
+  expect(await screen.findAllByRole('link', { name: /Ver más/ })).toHaveLength(6);
+  await user.click(screen.getAllByRole('link', { name: /Ver más/ })[0]);
+  expect(await screen.findByRole('heading', { name: /Pizza napolitana/i })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: /Añadir al carrito/i }));
+  await user.click(screen.getByRole('link', { name: 'REGISTRATE!' }));
+  await user.type(screen.getByLabelText('Email'), email);
+  await user.type(screen.getByLabelText('Contraseña', { exact: true }), password);
+  await user.type(screen.getByLabelText('Confirmar contraseña'), password);
+  await user.click(screen.getByRole('button', { name: 'Crear cuenta', exact: true }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Registro exitoso');
+  await user.click(screen.getByRole('link', { name: 'Profile', exact: true }));
+  expect(await screen.findByText(`Email: ${email}`)).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+  await user.type(screen.getByLabelText('Email'), email);
+  await user.type(screen.getByLabelText('Contraseña', { exact: true }), 'incorrecta');
+  await user.click(screen.getByRole('button', { name: 'Iniciar sesión', exact: true }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Invalid password');
+  await user.clear(screen.getByLabelText('Contraseña', { exact: true }));
+  await user.type(screen.getByLabelText('Contraseña', { exact: true }), password);
+  await user.click(screen.getByRole('button', { name: 'Iniciar sesión', exact: true }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Inicio de sesión exitoso');
+  await user.click(screen.getByRole('link', { name: /Total:/ }));
+  expect(screen.getByRole('heading', { name: 'Total: $5.950' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Pagar', exact: true }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Compra realizada con éxito');
+  expect(screen.getByRole('heading', { name: 'Total: $0' })).toBeInTheDocument();
+});
+
+test('API real: 401, 404, validación y CORS', async () => {
+  await expect(apiRequest('/auth/me')).rejects.toMatchObject({ status: 401 });
+  await expect(apiRequest('/checkouts', { method: 'POST', body: { cart: [] } })).rejects.toMatchObject({ status: 401 });
+  await expect(apiRequest('/auth/me', { token: 'invalido' })).rejects.toMatchObject({ status: 401 });
+  await expect(apiRequest('/pizzas/no-existe')).rejects.toMatchObject({ status: 404 });
+  await expect(apiRequest('/auth/register', { method: 'POST', body: { email: 'invalido', password: '123123' } })).rejects.toMatchObject({ status: 400 });
+  const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const response = await fetch(`${base}/checkouts`, { method: 'OPTIONS', headers: { Origin: 'http://localhost:5173', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type' } });
+  expect(response.status).toBe(204);
+  expect(response.headers.get('access-control-allow-origin')).toBe('*');
+  expect(response.headers.get('access-control-allow-headers')).toContain('authorization');
+});

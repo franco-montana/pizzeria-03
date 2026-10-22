@@ -1,5 +1,5 @@
-import React from 'react';
-import { useCart } from '../context/CartContext';
+import { Link } from 'react-router-dom';
+import { useCart } from '../context/useCart';
 import { formatPrice } from '../utils/formatPrice';
 
 const CardPizza = ({ pizza }) => {
@@ -85,6 +85,7 @@ const CardPizza = ({ pizza }) => {
           <p className="card-text" style={cardStyles.price}>
             ${formatPrice(pizza.price)}
           </p>
+          <Link className="btn btn-outline-dark w-100 mb-2" to={`/pizza/${pizza.id}`}>Ver más 👀</Link>
           <button 
             className="btn w-100"
             style={cardStyles.button}
